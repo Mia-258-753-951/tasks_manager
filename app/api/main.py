@@ -1,0 +1,67 @@
+
+from fastapi import FastAPI, Depends, HTTPException
+from uuid import UUID
+
+from app.domain.ports import TaskRepository
+from app.domain.task import Task
+from app.infrastructure.mem_repo import TaskMemoRepository
+from app.schemas.models import TaskIn, TaskResume, TaskComplete
+
+app = FastAPI(title='Task Manager')
+
+_repo = TaskMemoRepository()
+
+def get_repository() -> TaskRepository:
+    return _repo
+
+@app.get('/health')
+def health():
+    return {'status': 'ok'}
+
+@app.post('/tasks', response_model=TaskResume, status_code=201)
+def add_task(
+    payload: TaskIn, 
+    repository: TaskRepository = Depends(get_repository)
+    ):
+    new_task = Task(
+        title=payload.title,
+        status=payload.status,
+        project=payload.project,
+        notes=payload.notes,
+        start_date=payload.start_date,
+        due_date=payload.due_date,
+    )
+    repository.add(new_task)
+    return TaskResume(
+        id=new_task.id,
+        title=new_task.title,
+        project=new_task.project,
+        status=new_task.status,
+    )
+
+@app.get('/tasks', response_model=list[TaskResume])
+def read_all_tasks(repository: TaskRepository = Depends(get_repository)):
+    tasks = repository.list_all()
+    return [
+        TaskResume(id=t.id, title=t.title, project=t.project, status=t.status)
+        for t in tasks
+        ]
+
+@app.get('/tasks/{task_id}', response_model=TaskComplete)
+def read_task(
+    task_id: UUID,
+    repository: TaskRepository = Depends(get_repository)
+    ):
+    task = repository.get(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail=('task not found.'))
+    return TaskComplete(
+        id=task.id,
+        title=task.title,
+        status=task.status,
+        project=task.project,
+        notes=task.notes,
+        start_date=task.start_date,
+        due_date=task.due_date,
+    )
+    
