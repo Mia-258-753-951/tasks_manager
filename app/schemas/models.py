@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import date
 from uuid import UUID
+from typing import Any
 
 from app.domain.task import TaskStatus
 
@@ -26,3 +27,12 @@ class TaskComplete(BaseModel):
     start_date: date | None
     due_date: date | None
     id: UUID
+    
+class TaskPatch(BaseModel):
+    title: str | None = None
+    status: TaskStatus | None = None
+    project: str | None = None
+    notes: str | None = None
+    start_date: date | None = None
+    due_date: date | None = None
+    

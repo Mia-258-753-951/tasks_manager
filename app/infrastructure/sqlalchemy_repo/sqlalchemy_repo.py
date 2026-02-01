@@ -70,8 +70,9 @@ class SqlAlchemyTaskRepository(TaskRepository):
     def delete(self, task_id: UUID) -> None:
         with self.session_factory.begin() as s:
             row = s.get(TaskRow, task_id)
-            if row:
-                s.delete(row)
+            if row is None:
+                raise KeyError(f'Task not found with id {task_id}.')
+            s.delete(row)
             
     
         
