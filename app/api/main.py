@@ -1,15 +1,22 @@
 
 from fastapi import FastAPI, Depends, HTTPException
 from uuid import UUID
+from contextlib import asynccontextmanager
 
 from app.domain.ports import TaskRepository
 from app.domain.task import Task
-from app.infrastructure.mem_repo import TaskMemoRepository
+from app.infrastructure.sqlalchemy_repo.sqlalchemy_repo import SqlAlchemyTaskRepository
 from app.schemas.models import TaskIn, TaskResume, TaskComplete
+from app.infrastructure.sqlalchemy_repo.db import SessionLocal, init_db
 
-app = FastAPI(title='Task Manager')
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
 
-_repo = TaskMemoRepository()
+app = FastAPI(title='Task Manager', lifespan=lifespan)
+
+_repo = SqlAlchemyTaskRepository(SessionLocal)
 
 def get_repository() -> TaskRepository:
     return _repo

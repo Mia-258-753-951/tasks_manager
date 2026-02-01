@@ -27,7 +27,7 @@ class Task:
         if (self.due_date and self.start_date) and self.start_date > self.due_date:
             raise ValueError("task must start before or at due date.")
         
-        object.__setattr__(self, 'title', title_normalize)
+        object.__setattr__(self, 'title', title_normalize)  # Si usamos frozen, los atributos hay que cambiarlos así.
         object.__setattr__(self, 'id', uuid4())
         
     
